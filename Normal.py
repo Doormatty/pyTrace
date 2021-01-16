@@ -1,28 +1,14 @@
-'''
-Created on Apr 15, 2012
-
-@author: matt
-'''
 class Normal:
-    x = 0
-    y = 0
-    z = 0
-    def __init__(self, xx = 0, yy = 0, zz = 0):
-        if type(xx) == type(()):
-            self.x = xx[0]
-            self.y = xx[1]
-            self.z = xx[2]
-        else:
-            self.x = xx
-            self.y = yy
-            self.z = zz
-            
-    def __mul__(self, Norm):
-        tF = 0.0
-        tF += self.x * Norm.x
-        tF += self.y * Norm.y
-        tF += self.z * Norm.z
-        return tF
-            
-    def __str__(self):
-        return "Normal - X:" + str(self.x) + " Y:" + str(self.y) + " Z:" + str(self.z)
+    def __init__(self, x=0, y=0, z=0):
+        try:
+            (self.x, self.y, self.z) = x
+        except TypeError:
+            self.x = x
+            self.y = y
+            self.z = z
+
+    def __mul__(self, norm):
+        return (self.x * norm.x) + (self.y * norm.y) + (self.z * norm.z)
+
+    def __repr__(self):
+        return f"Normal(x={self.x}, y={self.y}, z={self.z})"

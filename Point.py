@@ -5,67 +5,54 @@ Created on Apr 15, 2012
 '''
 import math
 from Vector import Vector3D
+
+
 class Point3D:
-    x = 0
-    y = 0
-    z = 0
-    def __init__(self, xx = 0, yy = 0, zz = 0):
-        if type(xx) == type(()):
-            self.x = xx[0]
-            self.y = xx[1]
-            self.z = xx[2]
-        else:
-            self.x = xx
-            self.y = yy
-            self.z = zz
-            
-        
-    def __add__(self, Other):
-        if isinstance(Other, Vector3D):
-            #print 'Adding a Vector3D to a point to get a point.'
-            t = Point3D()
-            t.x = self.x + Other.x
-            t.y = self.y + Other.y
-            t.z = self.z + Other.z
-            return t
-        
-        if isinstance(Other, Point3D):
-            #print 'Adding a point to a point to get a Vector3D.'
-            t = Vector3D()
-            t.x = self.x + Other.x
-            t.y = self.y + Other.y
-            t.z = self.z + Other.z
-            return t
-        
-        t = Point3D()
-        t.x = self.x + Other
-        t.y = self.y + Other
-        t.z = self.z + Other
-        return t
-         
-    def __sub__(self, Other):         
-        if isinstance(Other, Vector3D):
-            #print 'Subtracting a Vector3D from a point to get a point.'
-            t = Point3D()
-        elif isinstance(Other, int) or isinstance(Other, float):
-            t = Point3D()
-            t.x = self.x - Other
-            t.y = self.y - Other
-            t.z = self.z - Other
-            return t
-        elif isinstance(Other, Point3D):
-            #print 'Subtracting a point from a point to get a Vector3D.'
-            t = Vector3D()
-        t.x = self.x - Other.x
-        t.y = self.y - Other.y
-        t.z = self.z - Other.z
-        return t
-    
+    def __init__(self, x=0, y=0, z=0):
+        try:
+            (self.x, self.y, self.z) = x
+        except TypeError:
+            self.x = x
+            self.y = y
+            self.z = z
+
+    def __add__(self, other):
+        if isinstance(other, Vector3D):
+            return Point3D(x=self.x + other.x, y=self.y + other.y, z=self.z + other.z)
+        if isinstance(other, Point3D):
+            return Vector3D(x=self.x + other.x, y=self.y + other.y, z=self.z + other.z)
+        return Point3D(x=self.x + other, y=self.y + other, z=self.z + other)
+
+    def __sub__(self, other):
+        if isinstance(other, Vector3D):
+            return Point3D(x=self.x - other.x, y=self.y - other.y, z=self.z - other.z)
+        elif isinstance(other, (int, float)):
+            return Point3D(x=self.x - other, y=self.y - other, z=self.z - other)
+        elif isinstance(other, Point3D):
+            return Vector3D(x=self.x - other.x, y=self.y - other.y, z=self.z - other.z)
+
+    def __rsub__(self, other):
+        if isinstance(other, Vector3D):
+            return Point3D(x=other.x - self.x, y=other.y - self.y, z=other.z - self.z)
+        elif isinstance(other, (int, float)):
+            return Point3D(x=other - self.x, y=other - self.y, z=other - self.z)
+        elif isinstance(other, Point3D):
+            return Vector3D(x=other.x - self.x, y=other.y - self.y, z=other.z - self.z)
+
+    def __mul__(self, other):
+        return Point3D(x=self.x * other, y=self.y * other, z=self.z * other)
+
+    def __rmul__(self, other):
+        return Point3D(x=self.x * other, y=self.y * other, z=self.z * other)
+
     def distance(self, point):
         return int(math.sqrt((self.x - point.x) ** 2 + (self.y - point.y) ** 2 + (self.z - point.z) ** 2))
-    
-    def __str__(self):
-        return "Point3D - X:" + str(self.x) + " Y:" + str(self.y) + " Z:" + str(self.z)
-    
-    def __eq__(self, oPoint3D):
-        return (self.x == oPoint3D.x) and (self.y == oPoint3D.y) and (self.z == oPoint3D.z)
+    #
+    # def __str__(self):
+    #     return "Point3D - X:" + str(self.x) + " Y:" + str(self.y) + " Z:" + str(self.z)
+
+    def __repr__(self):
+        return f"Point3D(x={self.x}, y={self.y}, z={self.z})"
+
+    def __eq__(self, other):
+        return (self.x == other.x) and (self.y == other.y) and (self.z == other.z)
