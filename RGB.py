@@ -1,32 +1,17 @@
-'''
-Created on Apr 15, 2012
-
-@author: matt
-'''
-
-
 class RGB:
     def __init__(self, r=0.0, g=0.0, b=0.0):
-        if r > 1.0:
-            self.r = 1.0
-        elif r < 0.0:
-            self.r = 0.0
-        else:
-            self.r = r
+        self.r = self._clamp(r)
+        self.g = self._clamp(g)
+        self.b = self._clamp(b)
 
-        if g > 1.0:
-            self.g = 1.0
-        elif g < 0.0:
-            self.g = 0.0
+    @staticmethod
+    def _clamp(value):
+        if value > 1.0:
+            return 1.0
+        elif value < 0.0:
+            return 0.0
         else:
-            self.g = g
-
-        if b > 1.0:
-            self.b = 1.0
-        elif b < 0.0:
-            self.b = 0.0
-        else:
-            self.b = b
+            return value
 
     def __add__(self, other):
         return RGB(other.r + self.r, other.g + self.g, other.b + self.b)
@@ -44,9 +29,6 @@ class RGB:
         return (round(self.r, 5) == round(other.r, 5)) and \
                (round(self.g, 5) == round(other.g, 5)) and \
                (round(self.b, 5) == round(other.b, 5))
-
-    def __str__(self):
-        return f"RGB - R: {self.r} G: {self.g} B: {self.b}"
 
     def __repr__(self):
         return f"RGB(r={self.r}, g={self.g}, b={self.b})"

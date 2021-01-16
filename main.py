@@ -48,7 +48,6 @@ def lighting(hit):
         shade = 0
 
     point_color = hit.object.material.color * (diffuse_coefficient * shade)
-    # point_color = object[1].color * (ambient_coefficient + diffuse_coefficient * shade)
     if hit.object.material.luma > 0:
         return hit.object.material.color
     return point_color
@@ -93,6 +92,8 @@ def raytrace(cast_ray, r=recurse_limit) -> RGB:
     else:
         # The object isn't reflective.
         return lighting(hit)
+
+
 
 
 def render():
