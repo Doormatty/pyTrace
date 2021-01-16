@@ -1,35 +1,33 @@
-import pygame, sys
-from pygame.locals import *
+import pygame
+import sys
 import time
-
 import random
 import datetime
+from pygame.locals import *
 from Primitives import *
 from RGB import RGB
 from Material import Material
 from Ray import Ray
-from TestSuite import testsuite
-
 
 background_color = RGB(0, 0, 0)
 xres = 640
 yres = 480
 psize = 1
-recurse = 10
+recurse_limit = 20
 Viewportz = 100
 
 
 def can_see(point, target):
     cast_ray = Ray()
-    cast_ray.o = point
-    cast_ray.d = Vector3D(-260, -100, 0)
-    cast_ray.d = cast_ray.d.normalize()
+    cast_ray.origin = point
+    cast_ray.dest = Vector3D(-260, -100, 0)
+    cast_ray.dest = cast_ray.dest.normalize()
     hit_distance = False
     closest_object = False
     for thing in World:
         intersection = thing.hit(cast_ray)
         if intersection:
-            t_hit_distance = cast_ray.o.distance(intersection.hit_point)
+            t_hit_distance = cast_ray.origin.distance(intersection.hit_point)
             if t_hit_distance < hit_distance:
                 hit_distance = t_hit_distance
                 closest_object = intersection
@@ -42,103 +40,93 @@ def can_see(point, target):
             return False
 
 
-def lighting(intersection):
+def lighting(hit):
     # How much light things get from cosine shading.
     diffuse_coefficient = 1
-    shade = Vector3D(0, 0, 1) * intersection.normal
+    shade = Vector3D(0, 0, 1) * hit.normal
     if shade < 0:
         shade = 0
 
-    point_color = intersection.object.mat.color * (diffuse_coefficient * shade)
+    point_color = hit.object.material.color * (diffuse_coefficient * shade)
     # point_color = object[1].color * (ambient_coefficient + diffuse_coefficient * shade)
-    if intersection.object.mat.luma > 0:
-        return intersection.object.mat.color
+    if hit.object.material.luma > 0:
+        return hit.object.material.color
     return point_color
 
 
 def lighting2(intersection):
     if can_see(intersection.hit_point, World[3]):
         print("CAN SEE!")
-        point_color = intersection.object.mat.color
+        point_color = intersection.object.material.color
         return point_color
     else:
         return RGB(0, 0, 0)
 
 
-def raytrace(cast_ray, r=recurse):
+def raytrace(cast_ray, r=recurse_limit) -> RGB:
     hit_distance = False
-    closest_object = False
+    hit = False
     for thing in World:
         intersection = thing.hit(cast_ray)
         if intersection:
-            t_hit_distance = cast_ray.o.distance(intersection.hit_point)
-            if t_hit_distance < hit_distance:
+            # return intersection.object.material.color  # For debugging
+            t_hit_distance = cast_ray.origin.distance(intersection.hit_point)
+            if t_hit_distance < hit_distance or not hit_distance:
                 hit_distance = t_hit_distance
-                closest_object = intersection
+                hit = intersection
     if not hit_distance:
         return background_color
+    # At this point, hit.object is the closest item that ray intersected with.
+    # Check for end of recursion
+    if r <= 1:
+        # Now we apply lighting
+        return lighting(hit)
+
+    # Check for Reflectance
+    if hit.object.material.reflect > 0:
+        reflect_ray = Ray()
+        reflect_ray.origin = hit.hit_point
+        reflect_ray.dest = cast_ray.dest + (2 * hit.normal * (0 - (hit.normal * cast_ray.dest)))
+        reflect_ray.dest = reflect_ray.dest.normalize()
+        reflect_color = raytrace(reflect_ray, r - 1)
+        return lighting(hit) + (reflect_color * hit.object.material.reflect)
     else:
-        # At this point, closest_object[4] contains the closest item the ray intersects with.
-        # Check for end of recursion
-        if r == 1:
-            # Now we apply lighting
-
-            lit_color = lighting(closest_object)
-            return RGB(1, 1, 1)
-            return lit_color
-
-        # Check for Reflectance
-        if closest_object.object.mat.reflect > 0:
-            reflect_ray = Ray()
-            reflect_ray.o = closest_object.hit_point
-            c1 = 0 - (closest_object.normal * cast_ray.d)
-            reflect_ray.d = cast_ray.d + (2 * closest_object.normal * c1)
-            reflect_ray.d = reflect_ray.d.normalize()
-            reflect_color = raytrace(reflect_ray, r - 1)
-
-            tcolor = lighting(closest_object)
-            tcolor = tcolor + (reflect_color * closest_object.object.mat.reflect)
-            return tcolor
-        else:
-            # The object isn't reflective.
-            lit_color = lighting(closest_object)
-            return lit_color
-        # return closest_object[1].color
+        # The object isn't reflective.
+        return lighting(hit)
 
 
 def render():
     pygame.init()
-    windowSurfaceObj = pygame.display.set_mode((xres, yres))
-    pygame.display.set_caption("Matt's Ray Tracer")
-    pixArr = pygame.PixelArray(windowSurfaceObj)
-    tRay = Ray()
-    tRay.d = Vector3D(0, 0, -1)
+    window_surface_obj = pygame.display.set_mode((xres, yres))
+    pixels = pygame.PixelArray(window_surface_obj)
+    pygame.display.set_caption("PyTrace - Render in Progress...")
+    pygame.event.set_allowed(pygame.QUIT)
+    ray = Ray()
+    ray.dest = Vector3D(0, 0, -1)
     #  Hardcoded Viewport for now
-    tRay.o.z = Viewportz
+    ray.origin.z = Viewportz
     starttime = time.time()
 
     for y in range(yres):
         for event in pygame.event.get():
-            if event.type == QUIT:
+            if event.type == pygame.QUIT:
                 filename = datetime.datetime.strftime(datetime.datetime.now(), "%H.%M.%S_%d-%b-%Y") + '.png'
-                pygame.image.save(windowSurfaceObj, filename)
+                pygame.image.save(window_surface_obj, filename)
                 pygame.quit()
                 sys.exit()
-        pygame.display.set_caption("Matt's Ray Tracer - Render in Progress...")
-        tRay.o.y = psize * (y - 0.5 * (yres - 1))
+
+        ray.origin.y = psize * (y - 0.5 * (yres - 1))
         for x in range(xres):
-            tRay.o.x = psize * (x - 0.5 * (xres - 1))
-            ray_color = raytrace(tRay)
-            tcolor = ray_color.finalcolor()
-            pixArr[x][y] = pygame.Color(tcolor[0], tcolor[1], tcolor[2])
+            ray.origin.x = psize * (x - 0.5 * (xres - 1))
+            pixels[x, y] = raytrace(ray).finalcolor()
         pygame.display.update()
 
-    del pixArr
-    pygame.display.set_caption(
-        "Matt's Ray Tracer - Render Finished - Total time: " + str(time.time() - starttime) + " seconds")
+    del pixels
+    pygame.display.set_caption(f"PyTrace Render Finished - Total time: {time.time() - starttime} seconds")
     print('Time :', time.time() - starttime)
     filename = datetime.datetime.strftime(datetime.datetime.now(), "%H.%M.%S_%d-%b-%Y") + '.png'
-    pygame.image.save(windowSurfaceObj, filename)
+    pygame.image.save(window_surface_obj, filename)
+    pygame.event.set_allowed((pygame.QUIT, pygame.KEYDOWN))
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -155,9 +143,9 @@ random.seed()
 # World.append(Cube(Point3D(0,0,0),Point3D(-100,100,0),Point3D(-100,0,-100),Material(RGB(.5,0,0))))
 
 
-World.append(Sphere(Point3D(100, -100, 1), 95, Material(RGB(.5, 0, 0), 1.0, 0.7, 0.0)))
-World.append(Sphere(Point3D(-100, -100, 1), 95, Material(RGB(0, .5, 0), 1.0, 0.7, 0.0)))
-World.append(Sphere(Point3D(1, 140, 1), 95, Material(RGB(0, 0, .5), 1.0, 0.7, 0.0)))
+World.append(Sphere(Point3D(50, -50, 1), 95, Material(RGB(.5, 0, 0), 1.0, 0.7, 0.0)))
+World.append(Sphere(Point3D(-50, -50, 1), 95, Material(RGB(0, .5, 0), 1.0, 0.7, 0.0)))
+World.append(Sphere(Point3D(1, 50, 1), 95, Material(RGB(0, 0, .5), 1.0, 0.7, 0.0)))
 
 # World.append(Sphere(Point3D(-260, -100, 0), 40, Material(RGB(1.0, 1.0, 1.0), 1.0, 0.0, 1.0)))
 # World.append(Plane(Point3D(1, 90, 200), Vector3D(0, 0, -1), Material(RGB(.3, .3, .3), 1.0, 0.0, 0.0)))
@@ -189,5 +177,4 @@ World.append(Sphere(Point3D(1, 140, 1), 95, Material(RGB(0, 0, .5), 1.0, 0.7, 0.
 # add a light
 # World.append(Sphere(Point3D(0, 0, 0), 30, Material(RGB(255, 255, 255), 1.0, 1.0, 1.0)))
 
-testsuite()
 render()

@@ -2,7 +2,7 @@ from RGB import RGB
 
 
 class Material:
-    def __init__(self, color=RGB(0, 0, 0), opacity=1.0, reflect=0.0, luma=0.0):
+    def __init__(self, color=RGB(25, 25, 25), opacity=1.0, reflect=0.0, luma=0.0):
         self.color = color
         self.opacity = opacity
         self.reflect = reflect

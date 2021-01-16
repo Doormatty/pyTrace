@@ -4,9 +4,6 @@ from Point import Point3D
 
 
 class Intersection:
-    object = Shape()
-    normal = Normal()
-    hit_point = Point3D()
 
     def __init__(self, shape, normal, hit_point):
         self.object = shape
