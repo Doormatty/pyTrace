@@ -1,10 +1,7 @@
-from RGB import RGB
-from Point import Point3D
-from Vector import Vector3D
 from Normal import Normal
 from Primitives import *
+from RGB import RGB
 from Ray import Ray
-import math
 
 
 class TestRGB:
