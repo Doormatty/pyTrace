@@ -56,8 +56,7 @@ class RayTracer:
             return material.color
 
         # Check if there is ambient lighting available
-        has_ambient_light = (hasattr(scene, 'ambient_intensity') and
-                             scene.ambient_intensity > 0)
+        has_ambient_light = (hasattr(scene, 'ambient_intensity') and scene.ambient_intensity > 0)
 
         # If no ambient light, return black
         if not has_ambient_light:
@@ -548,12 +547,21 @@ class RayTracer:
             # Update display after each scanline
             pygame.display.update()
 
-    def save_image(self, window_surface):
+    def save_image(self, window_surface, filename):
         """Save the rendered image with timestamp filename."""
-        timestamp = datetime.datetime.strftime(datetime.datetime.now(), "%H.%M.%S_%d-%b-%Y")
-        filename = f"render_{timestamp}.png"
-        pygame.image.save(window_surface, filename)
-        print(f"Image saved as: {filename}")
+        # Ensure renders directory exists
+        renders_dir = "renders"
+        if not os.path.exists(renders_dir):
+            os.makedirs(renders_dir)
+
+        if not filename:
+            timestamp = datetime.datetime.strftime(datetime.datetime.now(), "%H.%M.%S_%d-%b-%Y")
+            filename = f"render_{timestamp}.png"
+
+        # Create full path with renders directory
+        full_path = os.path.join(renders_dir, filename)
+        pygame.image.save(window_surface, full_path)
+        print(f"Image saved as: {full_path}")
 
     def render_ascii(self, window_surface, downsample_factor=4):
         """Render ASCII output from the current pygame surface."""
@@ -645,16 +653,22 @@ class RayTracer:
         print("=" * 50)
 
         # Also save to file
+        # Ensure renders directory exists
+        renders_dir = "renders"
+        if not os.path.exists(renders_dir):
+            os.makedirs(renders_dir)
+
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), "%H.%M.%S_%d-%b-%Y")
         ascii_filename = f"ascii_render_{timestamp}.txt"
-        with open(ascii_filename, 'w', encoding='utf-8') as f:
+        ascii_full_path = os.path.join(renders_dir, ascii_filename)
+        with open(ascii_full_path, 'w', encoding='utf-8') as f:
             f.write("ASCII RENDER OUTPUT:\n")
             f.write("=" * 50 + "\n")
             for line in ascii_lines:
                 f.write(line + "\n")
             f.write("=" * 50 + "\n")
 
-        print(f"ASCII render saved as: {ascii_filename}")
+        print(f"ASCII render saved as: {ascii_full_path}")
 
     def _handle_quit_events(self, window_surface):
         """Handle quit events and save the image if needed."""
@@ -739,8 +753,8 @@ Examples:
         return ivalue
 
 
-    parser.add_argument('-w', '--width', type=positive_int, default=600, help='Screen width in pixels (default: 600)')
-    parser.add_argument('-t', '--height', type=positive_int, default=600, help='Screen height in pixels (default: 600)')
+    parser.add_argument('-w', '--width', type=positive_int, default=1200, help='Screen width in pixels (default: 600)')
+    parser.add_argument('-t', '--height', type=positive_int, default=1200, help='Screen height in pixels (default: 600)')
     parser.add_argument('-r', '--recursion-limit', type=positive_int, default=5, help='Maximum recursion depth for ray tracing (default: 5)')
 
 

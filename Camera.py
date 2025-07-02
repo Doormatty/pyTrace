@@ -76,18 +76,20 @@ class Camera(JsonSerializable):
         if abs(forward % world_up) > CameraConfig.PARALLEL_THRESHOLD:
             # Camera is looking nearly straight up or down, use world right as reference
             world_right = CameraConfig.DEFAULT_WORLD_RIGHT
-            # Calculate right vector
-            right = forward ^ world_right
+            # Calculate right vector (reversed cross product for correct handedness)
+            right = world_right ^ forward
             right = right.normalize()
-            # Calculate up vector to maintain orthogonality
-            up = right ^ forward
+            # Calculate up vector to maintain orthogonality (reversed cross product for correct handedness)
+            up = forward ^ right
             up = up.normalize()
         else:
             # Normal case: calculate right vector to be perpendicular to both forward and world up
-            right = forward ^ world_up
+            # Reversed cross product to ensure positive X = RIGHT
+            right = world_up ^ forward
             right = right.normalize()
             # Calculate up vector to maintain orthogonality and be as close to world up as possible
-            up = right ^ forward
+            # Reversed cross product to ensure positive Z = UP
+            up = forward ^ right
             up = up.normalize()
 
         # Cache the results
