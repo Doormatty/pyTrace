@@ -1,7 +1,8 @@
 import math
+from Coord3D import Coord3D
 
 
-class Normal:
+class Normal(Coord3D):
     """ Surface normal representation.
     A normal is a unit vector perpendicular to a surface.
     """
@@ -38,6 +39,14 @@ class Normal:
     def __rmul__(self, scalar):
         """Scalar multiplication (right side)."""
         return Normal(self.x * scalar, self.y * scalar, self.z * scalar)
+
+    def __eq__(self, other):
+        """Check equality with another Normal."""
+        if not isinstance(other, Normal):
+            return False
+        return (abs(self.x - other.x) < 1e-10 and 
+                abs(self.y - other.y) < 1e-10 and 
+                abs(self.z - other.z) < 1e-10)
 
     def __repr__(self):
         return f"Normal(x={self.x:.4f}, y={self.y:.4f}, z={self.z:.4f})"

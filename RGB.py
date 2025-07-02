@@ -6,7 +6,7 @@ from JsonSerializable import JsonSerializable
 class RGB(JsonSerializable):
     """RGB color representation with values in range [0.0, 1.0]."""
 
-    def __init__(self, r=0.0, g=0.0, b=0.0):
+    def __init__(self, r=0.0, g=0.0, b=0.0, _skip_255_conversion=False):
         """
         Initialize an RGB color.
 
@@ -14,12 +14,15 @@ class RGB(JsonSerializable):
         Input values can be in range [0.0, 1.0] or [0, 255].
         """
         # Detect if values are likely in [0, 255] range and convert to [0.0, 1.0]
-        if isinstance(r, (int, float)) and r > 1.0:
-            r = r / 255.0
-        if isinstance(g, (int, float)) and g > 1.0:
-            g = g / 255.0
-        if isinstance(b, (int, float)) and b > 1.0:
-            b = b / 255.0
+        # Only do this conversion for user input, not for arithmetic results
+        if not _skip_255_conversion:
+            # Convert if values are >= 1.5 (assuming 255 range, but allowing some margin for 0-1 range)
+            if isinstance(r, (int, float)) and r >= 1.5:
+                r = r / 255.0
+            if isinstance(g, (int, float)) and g >= 1.5:
+                g = g / 255.0
+            if isinstance(b, (int, float)) and b >= 1.5:
+                b = b / 255.0
 
         self.r = self._clamp(r)
         self.g = self._clamp(g)
@@ -28,19 +31,31 @@ class RGB(JsonSerializable):
     @staticmethod
     def _clamp(value):
         """Clamp value to range [0.0, 1.0]."""
-        return max(0.0, min(1.0, value))
+        try:
+            return max(0.0, min(1.0, float(value)))
+        except (TypeError, ValueError):
+            return 0.1  # Default value for invalid input
 
     def __add__(self, other):
         """Add two colors, clamping the result."""
-        return RGB(self.r + other.r, self.g + other.g, self.b + other.b)
+        return RGB(self.r + other.r, self.g + other.g, self.b + other.b, _skip_255_conversion=True)
 
     def __sub__(self, other):
         """Subtract two colors, clamping the result."""
-        return RGB(self.r - other.r, self.g - other.g, self.b - other.b)
+        # Round to avoid floating point precision issues
+        r = round(self.r - other.r, 10)
+        g = round(self.g - other.g, 10)
+        b = round(self.b - other.b, 10)
+        return RGB(r, g, b, _skip_255_conversion=True)
 
-    def __mul__(self, num):
-        """Multiply color by a scalar, clamping the result."""
-        return RGB(num * self.r, num * self.g, num * self.b)
+    def __mul__(self, other):
+        """Multiply color by a scalar or another RGB color (component-wise), clamping the result."""
+        if isinstance(other, RGB):
+            # Component-wise multiplication with another RGB
+            return RGB(self.r * other.r, self.g * other.g, self.b * other.b, _skip_255_conversion=True)
+        else:
+            # Scalar multiplication
+            return RGB(other * self.r, other * self.g, other * self.b, _skip_255_conversion=True)
 
     def __rmul__(self, num):
         """Multiply color by a scalar (right multiplication)."""
@@ -71,6 +86,10 @@ class RGB(JsonSerializable):
     @classmethod
     def from_json(cls, data: Dict[str, float]) -> 'RGB':
         """Create an RGB instance from JSON data."""
+        # Handle invalid input types
+        if not isinstance(data, dict):
+            return cls(0.1, 0.1, 0.1)  # Return default RGB for invalid input
+
         return cls(
             r=data.get("r", 0.1),
             g=data.get("g", 0.1),

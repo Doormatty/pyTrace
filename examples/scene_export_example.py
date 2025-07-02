@@ -30,8 +30,7 @@ def main():
 
     scene.add_object(Cube(
         Point3D(-50, -50, -50),
-        Point3D(50, -50, -50),
-        Point3D(-50, 50, -50),
+        Point3D(50, 50, 50),
         Material(RGB(0.0, 0.0, 1.0))  # Blue cube
     ))
 

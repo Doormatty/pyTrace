@@ -6,7 +6,7 @@ from JsonSerializable import JsonSerializable
 class Material(JsonSerializable):
     """Material properties for raytracing objects."""
 
-    def __init__(self, color=None, opacity=1.0, reflect=0.0, luma=0.0, roughness=(0.1, 0.0)):
+    def __init__(self, color=None, opacity=1.0, reflect=0.0, luma=0.0, roughness=(0.0, 0.0)):
         """
         Initialize a material with specified properties.
 
@@ -16,7 +16,7 @@ class Material(JsonSerializable):
             reflect: Reflectivity (0.0 = no reflection, 1.0 = perfect mirror)
             luma: Emissive property (0.0 = not emissive, 1.0 = fully emissive)
             roughness: Surface roughness as a tuple of (scale, amplitude)
-                       scale: Controls the granularity of the roughness pattern (default: 0.1)
+                       scale: Controls the granularity of the roughness pattern (default: 0.0)
                        amplitude: Controls the strength of the roughness effect (0.0 = smooth, 1.0 = very rough)
         """
         self.color = color if color else RGB(0.1, 0.1, 0.1)

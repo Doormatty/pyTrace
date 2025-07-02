@@ -53,6 +53,9 @@ class Vector3D(Coord3D):
     def normalize(self) -> Vector3D:
         if self._length is None:
             self._length = self.length
+        if self._length == 0:
+            # Return zero vector if length is zero (cannot normalize)
+            return Vector3D(0, 0, 0)
         inv_length = 1.0 / self._length  # Calculate division once
         return Vector3D(self.x * inv_length, self.y * inv_length, self.z * inv_length)
 
